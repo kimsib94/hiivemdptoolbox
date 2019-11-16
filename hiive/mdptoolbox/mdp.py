@@ -618,7 +618,7 @@ class PolicyIteration(MDP):
     """
 
     def __init__(self, transitions, reward, gamma, policy0=None,
-                 max_iter=1000, eval_type=0, skip_check=False):
+                 max_iter=1000, eval_type=0, epsilon=0.001, skip_check=False):
         # Initialise a policy iteration MDP.
         #
         # Set up the MDP, but don't need to worry about epsilon values
@@ -626,6 +626,7 @@ class PolicyIteration(MDP):
                      skip_check=skip_check)
         # Check if the user has supplied an initial policy. If not make one.
         self.run_stats = None
+        self.epsilon = epsilon
         if policy0 is None:
             # Initialise the policy to the one which maximises the expected
             # immediate reward
@@ -764,7 +765,7 @@ class PolicyIteration(MDP):
                 _printVerbosity(itr, variation)
 
             # ensure |Vn - Vpolicy| < epsilon
-            if variation < ((1 - self.gamma) / self.gamma) * epsilon:
+            if variation < ((1 - self.gamma) / self.gamma) * self.epsilon:
                 done = True
                 if self.verbose:
                     print(_MSG_STOP_EPSILON_OPTIMAL_VALUE)

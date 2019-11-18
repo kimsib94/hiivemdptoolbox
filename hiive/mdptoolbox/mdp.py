@@ -841,7 +841,7 @@ class PolicyIteration(MDP):
 
             # Error, rewards, and time for every iteration and number of PI steps which might be specific to my setup
             self.run_stats.append(self._build_run_stat(s=None, a=None, r=_np.max(policy_V),
-                                                       p=policy_next, v=policy_V, error=var))
+                                                       p=list(policy_next), v=list(policy_V), error=var))
 
             if nd == 0:
                 if self.verbose:
@@ -1152,7 +1152,7 @@ class QLearning(MDP):
             Alpha decay and min ?
             And alpha and epsilon at each iteration?
             """
-            self.run_stats.append(self._build_run_stat(s=s, a=a, r=r, p=p, v=v, error=error))
+            self.run_stats.append(self._build_run_stat(s=s, a=a, r=r, p=list(p), v=list(v), error=error))
 
             # current state is updated
             s = s_new
@@ -1508,7 +1508,7 @@ class ValueIteration(MDP):
             # finds the maximum of the the rows. (Operates along the columns?)
             var = _util.getSpan(self.V - Vprev)
 
-            self.run_stats.append(self._build_run_stat(s=None, a=None, r=_np.max(self.V), p=self.policy, v=self.V, error=var))
+            self.run_stats.append(self._build_run_stat(s=None, a=None, r=_np.max(self.V), p=list(self.policy), v=list(self.V), error=var))
 
             if self.verbose:
                 _printVerbosity(self.iter, var)

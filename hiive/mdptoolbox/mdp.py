@@ -1047,7 +1047,7 @@ class QLearning(MDP):
     def __init__(self, transitions, reward, gamma,
                  alpha=0.1, alpha_decay=0.99, alpha_min=0.001,
                  epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.99,
-                 n_iter=10000, skip_check=False):
+                 n_iter=10000, theta=0.001, skip_check=False):
         # Initialise a Q-learning MDP.
 
         # The following check won't be done in MDP()'s initialisation, so let's
@@ -1064,6 +1064,7 @@ class QLearning(MDP):
         self.P = self._computeTransition(transitions)
 
         self.R = reward
+        self.theta = theta
 
         self.alpha = _np.clip(alpha, 0., 1.)
         self.alpha_start = self.alpha
@@ -1077,15 +1078,13 @@ class QLearning(MDP):
 
         # Initialisations
         self.Q = _np.zeros((self.S, self.A))
-        self.mean_discrepancy = []
         self.run_stats = []
 
     def run(self):
 
         # Run the Q-learning algorithm.
-        discrepancy = []
         self.run_stats = []
-        self.mean_discrepancy = []
+        self.deltas = []
 
         self.time = _time.time()
 
@@ -1131,12 +1130,9 @@ class QLearning(MDP):
 
             # Computing and saving maximal values of the Q variation
             error = _np.absolute(dQ)
-            discrepancy.append(error)
-
-            # Computing means all over maximal Q variations values
-            if len(discrepancy) == 100:
-                self.mean_discrepancy.append(_np.mean(discrepancy))
-                discrepancy = []
+            delta = _np.sum(_np.absolute(dQ))
+            if delta > 0:
+                self.deltas.append(delta)
 
             # compute the value function and the policy
             v = self.Q.max(axis=1)
@@ -1156,13 +1152,18 @@ class QLearning(MDP):
             # current state is updated
             s = s_new
 
-            self.alpha *= self.alpha_decay
-            if self.alpha < self.alpha_min:
-                self.alpha = self.alpha_min
+            if dQ > 0:
+                self.alpha *= self.alpha_decay
+                if self.alpha < self.alpha_min:
+                    self.alpha = self.alpha_min
 
-            self.epsilon *= self.epsilon_decay
-            if self.epsilon < self.epsilon_min:
-                self.epsilon = self.epsilon_min
+                self.epsilon *= self.epsilon_decay
+                if self.epsilon < self.epsilon_min:
+                    self.epsilon = self.epsilon_min
+
+            # check for convergence
+            if _np.mean(self.deltas[-10000:]) < self.theta:
+                break
 
         self._endRun()
         return self.run_stats
